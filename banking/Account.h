@@ -16,7 +16,7 @@ class Account {
   // Virtual to test.
   virtual void Unlock();
   int id() const { return id_; }
-
+  friend bool operator==(const Account el1, const Account el2);
  private:
   int id_;
   int balance_;
