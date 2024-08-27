@@ -1,5 +1,5 @@
-name: Build
-run-name: ${{ github.actor }} compiling based on CMakeLists.txt
+name: Docker
+run-name: compile within docker
 on: [push]
 jobs:
   compile_on_ubuntu:
@@ -9,62 +9,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Build Tests
+      - name: instalation
         run: |
-          cmake -H. -B_build -DBUILD_TESTS=ON -DBUILD_COVERAGE=ON
-          cmake --build _build
-          cmake --build _build --target test -- ARGS=--verbose
-      - name: Generate and send a code coverage report to Coveralls
-        uses: threeal/gcovr-action@v1.0.0
-        with:
-          excludes: third-party
-          coveralls-send: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-  make_artifacts:
-    if: startsWith( ${{ github.event.ref }} , '/refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build Tests
-        run: |
-          cmake -H. -B_build -DBUILD_TESTS=ON -DBUILD_COVERAGE=ON
-          cmake --build _build
-          cmake --build _build --target test -- ARGS=--verbose
-      - name: Make CPack artifacts
-        run: |
-          cd _build
-          cpack -G "TGZ"
-          cpack -G "DEB"
-          cpack -G "RPM"
-          cd ..
-      - name: Artifacts
+          sudo apt-get remove containerd.io
+          sudo apt install docker.io docker-compose -y
+      - name: Run sequence
+        run: docker build -t builder .
+      - name: image
+        run: docker run --name test -t builder ls
+      - name: Copy log file
+        run: docker cp test:/repo/log.txt ./log.txt
+      - name: file
         uses: actions/upload-artifact@v4
         with:
-          name: linux_artifacts
-          path: _build/banking_app-*
-  make_windows_artifacts:
-    if: startsWith( ${{ github.event.ref }} , '/refs/tags/v')
-    runs-on: windows-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build Tests
-        run: |
-          cmake -S D:/a/lab06/lab06 -B D:/a/lab06/lab06/_build
-          cmake --build _build
-      - name: Make CPack artifacts
-        run: |
-          cd _build
-          cpack -G "ZIP"
-          cpack -G "NSIS"
-          cd ..
-      - name: Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows_artifacts
-          path: _build/banking_app-*
+          name: llogs
+          path: /home/runner/work/lab08/lab08/log.txt
