@@ -1,8 +1,8 @@
-name: lab06
-run-name: Doing tasks
+name: Build
+run-name: ${{ github.actor }} compiling based on CMakeLists.txt
 on: [push]
 jobs:
-  compile:
+  compile_on_ubuntu:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -24,7 +24,7 @@ jobs:
     if: startsWith( ${{ github.event.ref }} , '/refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - name: check
+      - name: checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -40,10 +40,10 @@ jobs:
           cpack -G "DEB"
           cpack -G "RPM"
           cd ..
-      - name: upload_files
+      - name: Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux_res
+          name: linux_artifacts
           path: _build/banking_app-*
   make_windows_artifacts:
     if: startsWith( ${{ github.event.ref }} , '/refs/tags/v')
@@ -63,8 +63,8 @@ jobs:
           cpack -G "ZIP"
           cpack -G "NSIS"
           cd ..
-      - name: upload_files_2
+      - name: Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows_res
+          name: windows_artifacts
           path: _build/banking_app-*
